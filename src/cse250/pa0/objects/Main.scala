@@ -19,9 +19,9 @@ package cse250.pa0.objects
 
 object Main {
   def main(args: Array[String]): Unit = {
-    val filename = "data/Practice_CSV.csv"
+    val filename = "data/2017-2018_Assessment_Roll.csv"
     TaxEntryProcessor.sanitizeData(filename)
-//    println(TaxEntryProcessor.computeMostExpensiveEntry(filename+ "updated"))
-//    println(TaxEntryProcessor.computeOldestEntry(filename+"updated"))
+    println(TaxEntryProcessor.computeMostExpensiveEntry(filename+ "-updated"))
+    println(TaxEntryProcessor.computeOldestEntry(filename+"-updated"))
   }
 }

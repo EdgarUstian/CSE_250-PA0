@@ -21,25 +21,15 @@ import java.io.File
 import java.io.FileWriter
 import java.io.BufferedWriter
 
-import scala.io.Source
+import scala.io.{BufferedSource, Source}
 import cse250.assignments.objects.TaxEntry
 
 import scala.collection.mutable.ArrayBuffer
 
 object TaxEntryProcessor {
-  def sanitizeData(filename: String): Unit = {
-    // For opening files, look at Scala Cookbook File I/O Excerpt
-    val inputFile = scala.io.Source.fromFile(filename)
-    // Note: lines is an iterator to the file. This is only valid as long as the file is open.
-    //       Ensure you do not close the file prior to finishing the file usage.
-    val lines = inputFile.getLines()
-
-    val outputFile = new BufferedWriter(new FileWriter(new File(filename + "-updated")))
-
-    // Without the '\n' character, all output will be written as one long line.
-    // Process the lines.
-
-    var bigList: ArrayBuffer[ArrayBuffer[String]] = ArrayBuffer[ArrayBuffer[String]]() // Large Buffer Array to hold every line of the file
+  def sanitizer(lines: Iterator[String]): ArrayBuffer[ArrayBuffer[String]] = {
+    // Large Buffer Array to hold every line of the file
+    var bigList: ArrayBuffer[ArrayBuffer[String]] = ArrayBuffer[ArrayBuffer[String]]()
     for (line <- lines){
       var smallList: ArrayBuffer[String] = ArrayBuffer[String]() // Smaller Buffer Array that holds individual lines of the file
       var smallString: String = ""
@@ -76,6 +66,22 @@ object TaxEntryProcessor {
       smallList += smallString
       bigList += smallList
     }
+    bigList
+  }
+
+  def sanitizeData(filename: String): Unit = {
+    // For opening files, look at Scala Cookbook File I/O Excerpt
+    val inputFile: BufferedSource = scala.io.Source.fromFile(filename)
+    // Note: lines is an iterator to the file. This is only valid as long as the file is open.
+    //       Ensure you do not close the file prior to finishing the file usage.
+    val lines: Iterator[String] = inputFile.getLines()
+
+    val outputFile: BufferedWriter = new BufferedWriter(new FileWriter(new File(filename + "-updated")))
+
+    // Without the '\n' character, all output will be written as one long line.
+    // Process the lines.
+
+    val bigList: ArrayBuffer[ArrayBuffer[String]] = sanitizer(lines)
 
     // Removing unnecessary columns using ArrayBuffer.remove function
     val fetusDeletus: List[Int] = List(0, 0, 5, 5, 5, 5, 5, 5, 5, 11, 11, 11, 12, 18, 18, 18, 23, 23, 23)
@@ -113,10 +119,48 @@ object TaxEntryProcessor {
   }
 
   def computeMostExpensiveEntry(filename: String): TaxEntry = {
-    new TaxEntry
+    val mostExpensiveProperty: TaxEntry = new TaxEntry
+    val inputFile: BufferedSource = scala.io.Source.fromFile(filename)
+    val lines: Iterator[String] = inputFile.getLines()
+    val lysol: ArrayBuffer[ArrayBuffer[String]] = sanitizer(lines)
+    var mostExpensiveCan: Int = 0
+    var mostExpensiveRow: Int = 0
+    for (spray <- 1 until lysol.size){
+      if (lysol(spray)(13).toInt > mostExpensiveCan){
+        mostExpensiveCan = lysol(spray)(13).toInt
+        mostExpensiveRow = spray
+      }
+    }
+
+    for (headings <- lysol.head.indices){
+      mostExpensiveProperty.infoMap += (lysol.head(headings) -> lysol(mostExpensiveRow)(headings))
+    }
+//    println(mostExpensiveCan, mostExpensiveRow)
+
+    inputFile.close()
+    mostExpensiveProperty
   }
 
   def computeOldestEntry(filename: String): TaxEntry = {
-    new TaxEntry
+    val oldestProperty: TaxEntry = new TaxEntry
+    val inputFile: BufferedSource = scala.io.Source.fromFile(filename)
+    val lines: Iterator[String] = inputFile.getLines()
+    val lysol: ArrayBuffer[ArrayBuffer[String]] = sanitizer(lines)
+    var oldestCan: Int = 2019
+    var oldestRow: Int = 0
+    for (spray <- 1 until lysol.size){
+      if (lysol(spray)(15).nonEmpty && lysol(spray)(15).toInt < oldestCan && 1700 < lysol(spray)(15).toInt){
+        oldestCan = lysol(spray)(15).toInt
+        oldestRow = spray
+      }
+    }
+
+    for (headings <- lysol.head.indices){
+      oldestProperty.infoMap += (lysol.head(headings) -> lysol(oldestRow)(headings))
+    }
+    //    println(mostExpensiveCan, mostExpensiveRow)
+
+    inputFile.close()
+    oldestProperty
   }
 }
