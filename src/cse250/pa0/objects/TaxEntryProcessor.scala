@@ -20,8 +20,11 @@ package cse250.pa0.objects
 import java.io.File
 import java.io.FileWriter
 import java.io.BufferedWriter
+
 import scala.io.Source
 import cse250.assignments.objects.TaxEntry
+
+import scala.collection.mutable.ArrayBuffer
 
 object TaxEntryProcessor {
   def sanitizeData(filename: String): Unit = {
@@ -36,19 +39,74 @@ object TaxEntryProcessor {
     // Without the '\n' character, all output will be written as one long line.
     // Process the lines.
 
-    // Creates a map that contains every line properly RegExed
-    var bigBoiList: List[List[String]] = List()
-    for(line <- lines) {
-      val newLine = line.split(",(?=(?:[^\"]*\"[^\"]*\")*[^\"]*$)").toList
-      bigBoiList = bigBoiList :+ newLine
+    var bigList: ArrayBuffer[ArrayBuffer[String]] = ArrayBuffer[ArrayBuffer[String]]() // Large Buffer Array to hold every line of the file
+    for (line <- lines){
+      var smallList: ArrayBuffer[String] = ArrayBuffer[String]() // Smaller Buffer Array that holds individual lines of the file
+      var smallString: String = ""
+      var quotes: Boolean = false
+      var quoteCounter: Int = 0 // The counter that acts like a T-Flop
+      var index: Int = 0
+      while (index < line.length){
+        // Accounts for behavior of separators of quotes
+        if (line(index) == '"'){
+          if (quoteCounter == 0){
+            quotes = true
+            quoteCounter = 1
+          }
+          else if (quoteCounter == 1){
+            quotes = false
+            quoteCounter = 0
+          }
+        }
+        // Accounts for the behavior of commas
+        if (line(index) == ','){
+          if (!quotes){
+            smallList += smallString
+            smallString = ""
+          }
+          if (quotes){
+            smallString = smallString + line(index)
+          }
+        }
+        else{
+          smallString = smallString + line(index)
+        }
+        index += 1
+      }
+      smallList += smallString
+      bigList += smallList
     }
-    // Iterates over the created map in order to sanitize the columns
-    val deletThis: List[Int] = List(0, 1, 7, 8, 9, 10, 11, 12, 13, 20, 21, 22, 24, 31, 32, 33, 39, 40, 41)
-    for (list <- bigBoiList){
-      for (column <- deletThis){
-        list.patch(column, Nil, 1)
+
+    // Removing unnecessary columns using ArrayBuffer.remove function
+    val fetusDeletus: List[Int] = List(0, 0, 5, 5, 5, 5, 5, 5, 5, 11, 11, 11, 12, 18, 18, 18, 23, 23, 23)
+    for (smallList <- bigList){
+      for (fetus <- fetusDeletus){
+        smallList.remove(fetus)
       }
     }
+
+    // Removing each row that does not contain a 5-DIGIT Zip code
+    var index:Int = 0
+    while(index < bigList.size){
+      if (bigList(index)(10).isEmpty){
+        bigList.remove(index)
+        index -= 1
+      }
+      index += 1
+    }
+
+    // Writing each line to a new file
+    for (line <- bigList){
+      var saniString: String = ""
+      var index: Int = 0
+      while (index < line.size - 1){
+        saniString = saniString + line(index) + ","
+        index += 1
+      }
+      saniString = saniString + line(index)
+      outputFile.write(saniString + "\n")
+    }
+
     // Close the files at the end.
     inputFile.close()
     outputFile.close()
