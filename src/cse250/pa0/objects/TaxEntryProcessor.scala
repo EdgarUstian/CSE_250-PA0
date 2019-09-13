@@ -9,11 +9,11 @@
  * http://creativecommons.org/licenses/by-nc-sa/4.0/.
  *
  * Submission author
- * UBIT:
- * Person#:
+ * UBIT: edgarust
+ * Person#: 50230866
  *
  * Collaborators (include UBIT name of each, comma separated):
- * UBIT:
+ * UBIT: edgarust
  */
 package cse250.pa0.objects
 
